@@ -1,0 +1,11 @@
+Model Information:
+* title:	Green Dart
+* source:	https://sketchfab.com/3d-models/green-dart-c7729c75552b487dbf443212176879e8
+* author:	decentralized13 (https://sketchfab.com/decentralized13)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Green Dart" (https://sketchfab.com/3d-models/green-dart-c7729c75552b487dbf443212176879e8) by decentralized13 (https://sketchfab.com/decentralized13) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

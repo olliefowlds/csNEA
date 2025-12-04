@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My first three.js app</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/room.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.3/socket.io.js"></script>
+    <script type="importmap">
+    {
+    "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+    }
+    }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
+  </head>
+  <body>
+    <div class="header-container">
+      <p>Welcome {{ username }}! &nbsp;&nbsp; Join with this code: {{ gameCode }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+      <button onclick="window.location.href='{{ url_for('home') }}'">Back to Home</button>
+    </div>
+
+    <div class="main-container">
+      <canvas id="c"></canvas>
+    </div>
+
+    <div class="info-container">
+      <div class="left-side">
+        <button id="startGame" type="button">Start Game</button>
+
+        <div class="playerTurn-div" id="playerTurnDiv">
+          It's <span id="playerTurnSpan"></span>'s turn!
+        </div>
+
+
+      </div>
+      <div class="middle">    
+        <div>
+            <label for="scoreInput">Score:</label>
+            <input type="number" id="scoreInput" name="scoreInput" value="0">
+            <button id="sendScoreBtn">Send Score!</button>
+                <p><span id="player1ScoreSpan"></span></p>
+                <p><span id="player2ScoreSpan"></span></p>
+                
+        </div>
+      </div>
+
+      <div class="right-side">
+        <p>You just threw a <span id="mostRecentScoreSpan"></span></p>
+        <button id="resetDartPos">Reset Dart Position</button>
+      </div>
+    </div>
+
+
+
+
+    <script>    // pass variables into the JS 
+      const gameCode = "{{ gameCode }}";
+      const username = "{{ username }}";
+    </script>
+    <script>
+      window.Dart_Path = "{{ url_for('static', filename='models/dart/scene.gltf')}}"
+      window.Dartboard_Path = "{{ url_for('static', filename='models/dartboard/scene.gltf')}}"
+    </script>
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+  </body>
+</html>

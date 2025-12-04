@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Player Statistics</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <h1>Player Statistics</h1>
+    <p>Here are the statistics for {{username}}</p>
+    <table>
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Games Played</th>
+            <th>Games Won</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{username}}</td>
+            <td>{{stats['totalGamesPlayed']}}</td>
+            <td>{{stats['totalGamesWon']}}</td>
+        </tr>
+    </tbody>
+</table>
+
+    <h1>Global Statistics</h1>
+
+    <form method="POST" action="">
+        <label for="rankBy">Rank by:</label>
+        <select title="rankBy" name="rankBy" id="rankBy">
+            <option value="wins">Select...</option>
+            <option value="wins">Wins</option>
+            <option value="gamesPlayed">Games Played</option>
+        </select>
+        <input type="submit" value="Search">
+    </form>
+
+    <table>
+    <thead>
+        <tr>
+            <th>Rank</th>
+            <th>Username</th>
+            <th>{{globalStats['rankBy']}}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for record in globalStats['globalRank'] %}
+        <tr>
+            <td>{{ record[0] }}</td>
+            <td>{{ record[1] }}</td>
+            <td>{{ record[2] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</body>
+</html>

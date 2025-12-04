@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <h1>Register</h1>
+    <form method="POST">
+        <input type="text" name="username" placeholder="Username" required><br>
+        <input type="password" name="password" placeholder="Password" required><br>
+        <input type="submit" value="Register">
+        {% if message %}
+            <p>{{ message }}
+                {% if message == "Username taken, sorry! Please enter a different one, or " %}
+                    <a href="/login">log in here.</a>
+                {% endif %}
+            </p>
+        {% endif %}
+    </form>
+    <p>Already have an account? Login  <a href="/login">here</a>.</p>
+</body>
+</html>

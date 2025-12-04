@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Player Statistics</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <h1>Shop</h1>
+    <p>Welcome to the shop!</p>
+    <p>Balance: {{ dataToSend.currency }}</p>
+
+    
+    <form method="post" action="/shop">
+        <table>
+            <thead>
+                <tr>
+                    <th>Tags</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for item in dataToSend.tags %}
+                <tr>
+                    <td>{{ item.desc }}</td>
+                    <td>{{ item.price }}</td>
+                    {% if item.purchased == False %}
+                    <td><button type="submit" name="{{item.itemID}}" class="join-btn">Purchase!</button></td>
+                    {% else %}
+                    <td>Purchased</td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </form>
+     
+</body>
+</html>
