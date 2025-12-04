@@ -280,7 +280,16 @@ def startGame(data):
 # show throw on other user screen
 @socketio.on('sendThrowForOtherUser')
 def handleThrowForOtherUser(data):
-    socketio.emit('receiveOtherUserThrow', {'e': data['e']}, to=int(data['gameCode']))
+    # get non player turn SID
+    gameCode = int(data['gameCode'])
+    game = gameManager.getGame(gameCode)
+    playerTurn = game.getPlayerTurn()
+    players = game.getPlayers()
+    for sid in players: 
+        if sid != playerTurn: 
+            nonPlayerSID = sid
+
+    socketio.emit('receiveOtherUserThrow', {'target': data['target']}, to=nonPlayerSID)
 
 @socketio.on('sendScore')
 def handleScore(data):

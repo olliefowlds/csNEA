@@ -183,68 +183,79 @@ export function handleMouseclick(event) {
   target = getLookAtPos(event)
   canvas.removeEventListener('mousemove', handleMousemove); // Remove previous mouse move listener
 
+  // get flight path using throwPhysics.js
+  let path, finalPos
+  [path, finalPos] = getFlightInfo(target);
+  
+  // get score using getPoints.js
+  [mostRecentScore, isDouble] = getPoints(finalPos);
 
+  // DART FOLLOWS SIDE OF DART METHOD 
+  const cameraOffset = new THREE.Vector3(-10, 3, 0); // Offset of camera relative to dart
+  let i = 0;
+  animatePath(i, path, cameraOffset, finalPos);
+
+  return [mostRecentScore, isDouble, target]
+}  // score is for server, target is for other user to see 
+
+function getFlightInfo(target) {
   // using throwPhysics.js, calc the initial velocities based off mouse pos and then find the flight path. 
   const initialVelocities = getInitialVelocities(dartThrowingPosition, target);
   let path = calcNextPos(dartThrowingPosition, initialVelocities, 0.01);
   let finalPos = path[path.length - 1];
-  
-  // get score using getPoints.js
-  console.log(getPoints(finalPos));
-  [mostRecentScore, isDouble] = getPoints(finalPos);
+  return [path, finalPos]
+}
+
+function animatePath(i, path, cameraOffset, finalPos) {
+  if (i < path.length) {
+
+    // Move the dart
+    dartWrapper.position.copy(path[i]);
+
+    // if not at wall yet
+    if (i < path.length - 1) {
+      const nextPos = path[i + 1];
+
+      // Rotate the dart to face its path
+      dartWrapper.lookAt(nextPos);
+
+      // find camera position relative to dart's orientation
+      const offset = cameraOffset.clone().applyQuaternion(dartWrapper.quaternion);
+      const targetCamPos = dartWrapper.position.clone().add(offset);
+      camera.position.lerp(targetCamPos, 0.4);      // THE HIGHER THE NUMBER THE CLOSER THE DART. THIS COULD BE CHANGED THROUGH SETTINGS
+
+      // Always look at the dart itself (not nextPos)
+      camera.lookAt(dartWrapper.position);
+    } else {
+      // final camera transition (gsap makes it smooth!)
+      camera.lookAt(finalPos.x, finalPos.y, finalPos.z)
+      gsap.to(camera.position, {
+        x: finalPos.x - 50,
+        y: finalPos.y,
+        z: finalPos.z,
+        duration: 1.5,
+        ease: "power2.out",
+        onUpdate: () => {
+          camera.lookAt(finalPos);
+        }
+      });
+    }
+
+    renderer.render(scene, camera);
+    i++;
+    setTimeout(() => animatePath(i, path, cameraOffset, finalPos), 20);
+  }
+}
+
+export function handleOtherUserThrow(target) {
+  // get flight path using throwPhysics.js
+  let path, finalPos
+  [path, finalPos] = getFlightInfo(target);
 
   // DART FOLLOWS SIDE OF DART METHOD 
+  const cameraOffset = new THREE.Vector3(-10, 3, 0); // Offset of camera relative to dart
   let i = 0;
-  // Offset of camera relative to dart
-  const cameraOffset = new THREE.Vector3(-10, 3, 0); // behind and above the dart
-
-  function animatePath() {
-    if (i < path.length) {
-
-      // Move the dart
-      dartWrapper.position.copy(path[i]);
-
-      // if not at wall yet
-      if (i < path.length - 1) {
-        const nextPos = path[i + 1];
-
-        // Rotate the dart to face its path
-        dartWrapper.lookAt(nextPos);
-
-        // find camera position relative to dart's orientation
-        const offset = cameraOffset.clone().applyQuaternion(dartWrapper.quaternion);
-        const targetCamPos = dartWrapper.position.clone().add(offset);
-        camera.position.lerp(targetCamPos, 0.4);      // THE HIGHER THE NUMBER THE CLOSER THE DART. THIS COULD BE CHANGED THROUGH SETTINGS
-
-        // Always look at the dart itself (not nextPos)
-        camera.lookAt(dartWrapper.position);
-      } else {
-        // final camera transition (gsap makes it smooth!)
-        camera.lookAt(finalPos.x, finalPos.y, finalPos.z)
-        console.log('final pos:', finalPos)
-        gsap.to(camera.position, {
-          x: finalPos.x - 50,
-          y: finalPos.y,
-          z: finalPos.z,
-          duration: 1.5,
-          ease: "power2.out",
-          onUpdate: () => {
-            camera.lookAt(finalPos);
-          }
-        });
-      }
-
-      renderer.render(scene, camera);
-      i++;
-      setTimeout(animatePath, 20);
-    }
-  }
-
-  animatePath();
-
-
-  console.log('almost go time,', [mostRecentScore, isDouble])
-  return [mostRecentScore, isDouble]
+  animatePath(i, path, cameraOffset, finalPos);
 }
 
 

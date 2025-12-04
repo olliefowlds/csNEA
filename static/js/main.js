@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { canvasRenderSetUp, cameraSetUp, boardSetUp, addDart, roomSetUp, calcCameraOffset, getLookAtPos, handleMousemove, handleMouseclick, respawn, resetDartPos } from './graphics.js'
+import { canvasRenderSetUp, cameraSetUp, boardSetUp, addDart, roomSetUp, calcCameraOffset, getLookAtPos, handleMousemove, handleMouseclick, handleOtherUserThrow, respawn, resetDartPos } from './graphics.js'
 
 
 const dartboardPosition = new THREE.Vector3(237, 173, 0);
@@ -142,8 +142,9 @@ function handleMouseclickEventHandler(e) {
     resultsArray = handleMouseclick(e)
     mostRecentScore = resultsArray[0]
     isDouble = resultsArray[1]
+    target = resultsArray[2]
     mostRecentScoreSpan.innerHTML = mostRecentScore, isDouble
-    socket.emit('sendThrowForOtherUser', {'e': e, 'gameCode': gameCode})
+    socket.emit('sendThrowForOtherUser', {'target': target, 'gameCode': gameCode})
     socket.emit('sendScore', {'score': mostRecentScore, 'gameCode': gameCode, 'isDouble':isDouble})
 }
 
@@ -220,5 +221,6 @@ socket.on('terminateGame', (data) => {
 
 socket.on('receiveOtherUserThrow', (data) => {
     console.log('receiving the other user throw')
-    console.log(data.e)
+    console.log(data.target)
+    handleOtherUserThrow(data.target)
 })
