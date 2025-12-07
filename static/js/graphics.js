@@ -180,23 +180,26 @@ export function handleMousemove(event) {
 }
 
 export function handleMouseclick(event) {
-  target = getLookAtPos(event)
-  canvas.removeEventListener('mousemove', handleMousemove); // Remove previous mouse move listener
+  return new Promise(resolve => {
 
-  // get flight path using throwPhysics.js
-  let path, finalPos
-  [path, finalPos] = getFlightInfo(target);
-  
-  // get score using getPoints.js
-  [mostRecentScore, isDouble] = getPoints(finalPos);
+    target = getLookAtPos(event);
+    canvas.removeEventListener('mousemove', handleMousemove);
 
-  // DART FOLLOWS SIDE OF DART METHOD 
-  const cameraOffset = new THREE.Vector3(-10, 3, 0); // Offset of camera relative to dart
-  let i = 0;
-  animatePath(i, path, cameraOffset, finalPos);
+    let path, finalPos
+    [path, finalPos] = getFlightInfo(target);
+    [mostRecentScore, isDouble] = getPoints(finalPos);
 
-  return [mostRecentScore, isDouble, target]
-}  // score is for server, target is for other user to see 
+    const cameraOffset = new THREE.Vector3(-10, 3, 0);
+    let i = 0;
+
+    animatePath(i, path, cameraOffset, finalPos, () => {
+      resolve([mostRecentScore, isDouble, target]);
+    });
+
+  });
+} 
+
+
 
 function getFlightInfo(target) {
   // using throwPhysics.js, calc the initial velocities based off mouse pos and then find the flight path. 
@@ -206,7 +209,7 @@ function getFlightInfo(target) {
   return [path, finalPos]
 }
 
-function animatePath(i, path, cameraOffset, finalPos) {
+function animatePath(i, path, cameraOffset, finalPos, onComplete) {
   if (i < path.length) {
 
     // Move the dart
@@ -243,7 +246,9 @@ function animatePath(i, path, cameraOffset, finalPos) {
 
     renderer.render(scene, camera);
     i++;
-    setTimeout(() => animatePath(i, path, cameraOffset, finalPos), 20);
+    setTimeout(() => animatePath(i, path, cameraOffset, finalPos, onComplete), 20);
+  } else {
+    if (onComplete) onComplete();
   }
 }
 
@@ -338,16 +343,6 @@ export function initGraphics() {
     });
 
 
-
-
-
-
-
-
-
-
-
-
     let rotateRight = true
     renderer.render(scene, camera);
     function render(time) {
@@ -374,8 +369,6 @@ export function initGraphics() {
     }
 
     requestAnimationFrame(render);
-
-
 
 
 }

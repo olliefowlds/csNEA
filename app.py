@@ -348,6 +348,10 @@ def handleScore(data):
         # 3 | emit terminateGame
         socketio.emit('terminateGame', {'winner':winner.getUsername()}, to=gameCode)
 
+# when player 1 resets dart pos, reset player 2's aswell 
+@socketio.on('resetDartPos')
+def resetDartPos(data):
+    socketio.emit('resetDartPosForOtherUser', {}, to=int(data['gameCode']))
 
 # !!! END OF ROOM PAGE !!!
 

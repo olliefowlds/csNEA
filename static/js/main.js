@@ -136,10 +136,15 @@ sendScoreBtn.addEventListener("click", sendScore)
 
 
 
-function handleMouseclickEventHandler(e) {
+async function handleMouseclickEventHandler(e) {
     disableDartThrow()
     disableDartResetPosBtn()
-    resultsArray = handleMouseclick(e)
+
+    // need to create a promise here so that animation must be complete first 
+    resultsArray = await handleMouseclick(e)
+    // execute after hangleMouseClick
+
+    console.log('finished waiting')
     mostRecentScore = resultsArray[0]
     isDouble = resultsArray[1]
     target = resultsArray[2]
@@ -147,6 +152,7 @@ function handleMouseclickEventHandler(e) {
     socket.emit('sendThrowForOtherUser', {'target': target, 'gameCode': gameCode})
     socket.emit('sendScore', {'score': mostRecentScore, 'gameCode': gameCode, 'isDouble':isDouble})
 }
+
 
 function enableDartResetPosBtn() {
     // calls reset dart pos function from graphics.js
@@ -162,8 +168,13 @@ function disableDartResetPosBtn() {
 
 function resetDartPosHandler() {
     console.log('youve just pressed me and now im resetting dart and letting you aim')
+    socket.emit('resetDartPos', {'gameCode': gameCode})
     resetDartPos()
     enableDartThrow()
+}
+
+function resetDartPosForOtherUser() {
+    resetDartPos()
 }
 
 function enableDartThrow() {
@@ -187,6 +198,10 @@ function sendScore() {
     socket.emit('sendScore', {'score': scoreInput.value, 'gameCode': gameCode, 'isDouble':true})
 }
 
+
+socket.on("connect", () => {
+    resetDartPosBtn.style.display = "none"
+});
 
 
 socket.on('beginGameFrontEnd', (data) => {
@@ -223,4 +238,8 @@ socket.on('receiveOtherUserThrow', (data) => {
     console.log('receiving the other user throw')
     console.log(data.target)
     handleOtherUserThrow(data.target)
+})
+
+socket.on('resetDartPosForOtherUser', (data) => {
+    resetDartPosForOtherUser()
 })
