@@ -1,0 +1,114 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    font-family: Arial, sans-serif;
+    background: #fff;
+}
+.header-container{
+    display: flex;
+    height: 5vh;  
+    background-color: #3ED174;
+    width: 100%;
+    justify-content: space-between;  
+    align-items: center;
+    padding: 0 1rem;    
+    box-sizing: border-box;
+}
+
+/* .welcome{} */
+/* .sign-out-container{} */
+
+.sign-out-btn {
+    padding: 10px;
+    border: 1px solid #3ED174;
+    background: #81F3AB;
+    cursor: pointer;
+    font-size: 14px;
+    border-radius: 3px;
+}
+
+.sign-out-btn:hover {
+    border: 1px solid #81F3AB;
+    background-color: #3ED174 ;
+}
+
+.join-game-container {
+    margin: 1rem auto;
+    width: 80%;
+    margin-top: 4rem;
+}
+
+.join {
+    display: flex;
+    margin-bottom: 1rem;
+}
+
+.input-field,
+.submit-btn {
+    padding: 15px; /* same padding for both */
+    font-size: 1.5rem;
+    border-radius: 3px;
+    box-sizing: border-box; /* ensures padding is included in height */
+}
+.input-field {
+    flex: 3;
+    border: 1px solid #81F3AB;
+    text-align: center;
+    background-color: white;
+    color: black; 
+    transition:0.2s;
+}
+.input-field:hover,
+.input-field:focus {
+    border-color: #3ED174;
+    outline: none;  
+}
+.input-field::placeholder {
+    opacity: 1;
+    color:black;
+}
+.submit-btn {
+    flex: 1;
+    border: 1px solid #3ED174;
+    background: #81F3AB;
+    cursor: pointer;
+    transition:0.2s;
+}
+.submit-btn:hover {
+    background: #3ED174;
+}
+.create{
+    margin: 1rem auto;
+}
+.create-btn{
+    width: 100%;
+}
+.error {
+    width: 100%;
+    border: 1px solid #81F3AB;
+    text-align: center;
+    background-color: white;
+    color: black; 
+}
+
+.other-btns {
+    margin: 5rem auto;
+    width: 80%;
+    display: flex;
+}
+
+.other-btns button {
+    flex: 1;
+    font-size: 1.5rem;
+    border: 1px solid #3ED174;
+    background-color: white;
+    cursor: pointer;
+    padding: 1rem;
+    transition:0.2s;
+}
+.other-btns button:hover {
+    background: #3ED174;
+}

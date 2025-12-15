@@ -121,18 +121,22 @@ socket.on('connect', () => {
 const startGameButton = document.getElementById('startGame')
 const scoreInput = document.getElementById("scoreInput")
 const sendScoreBtn = document.getElementById("sendScoreBtn")
-const scoreDisplaySpan = document.getElementById("scoreDisplaySpan")
+// const scoreDisplaySpan = document.getElementById("scoreDisplaySpan")
+const scoreContainerDiv = document.getElementById("scoreContainerDiv")
 const player1ScoreSpan = document.getElementById("player1ScoreSpan")
 const player2ScoreSpan = document.getElementById("player2ScoreSpan")
 const playerTurnSpan = document.getElementById("playerTurnSpan")
 const playerTurnDiv = document.getElementById("playerTurnDiv")
 const mostRecentScoreSpan = document.getElementById('mostRecentScoreSpan')
+const roomCodeP = document.getElementById('roomCodeP')
+const playerTurnP = document.getElementById('playerTurnP')
+const errorMessageDiv = document.getElementById('errorMessage')
 const resetDartPosBtn = document.getElementById('resetDartPos')
 let isDouble
 let resultsArray 
 
 startGameButton.addEventListener("click", startGame)
-sendScoreBtn.addEventListener("click", sendScore)
+// sendScoreBtn.addEventListener("click", sendScore)
 
 
 
@@ -167,7 +171,6 @@ function disableDartResetPosBtn() {
 }
 
 function resetDartPosHandler() {
-    console.log('youve just pressed me and now im resetting dart and letting you aim')
     socket.emit('resetDartPos', {'gameCode': gameCode})
     resetDartPos()
     enableDartThrow()
@@ -201,13 +204,17 @@ function sendScore() {
 
 socket.on("connect", () => {
     resetDartPosBtn.style.display = "none"
+
 });
 
 
 socket.on('beginGameFrontEnd', (data) => {
+    roomCodeP.style.display = "none"
+    playerTurnP.style.display = "block"
+    playerTurnSpan.innerText = data.playerTurn
     player1ScoreSpan.innerText = data.player1Info
     player2ScoreSpan.innerText = data.player2Info
-    playerTurnSpan.innerText = data.playerTurn
+    scoreContainerDiv.style.display = "block"
     startGameButton.style.display = "none"
     playerTurnDiv.style.display = "block"
 })
@@ -235,7 +242,6 @@ socket.on('terminateGame', (data) => {
 })
 
 socket.on('receiveOtherUserThrow', (data) => {
-    console.log('receiving the other user throw')
     console.log(data.target)
     handleOtherUserThrow(data.target)
 })
@@ -243,3 +249,13 @@ socket.on('receiveOtherUserThrow', (data) => {
 socket.on('resetDartPosForOtherUser', (data) => {
     resetDartPosForOtherUser()
 })
+
+let errorTimeout
+socket.on('clientError', (data) => {
+    clearTimeout(errorTimeout)
+    errorMessageDiv.style.display = "block";
+    errorMessageDiv.innerHTML = '<p>' + data.errorMessage + '</p>'
+    errorTimeout = setTimeout(() => {
+        errorMessageDiv.style.display = "none";
+    }, 2000);
+});

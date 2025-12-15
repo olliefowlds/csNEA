@@ -57,7 +57,7 @@ with engine.connect() as connection:
     """))
     connection.commit()
     
-
+# init gameManager 
 gameManager = GameManager()
 
 
@@ -188,9 +188,7 @@ def home():
         elif gameManager.getGame(int(gameCode)).isFull() == True:
             error = "Room is full."
 
-        
-
-
+    
         if error != None:
             return render_template("home.html", error=error, gameCode=gameCode,username=username,user=session['username'])
 
@@ -201,9 +199,7 @@ def home():
 
 
     # default path
-    return render_template('home.html', user=session['username'])
-
-
+    return render_template('home.html', username=session['username'])
 
 # !!! END OF HOME PAGE !!!
 
@@ -211,6 +207,8 @@ def home():
 # !!! ROOM PAGE !!!
 @app.route('/room/<int:gameCode>')
 def room(gameCode):
+    if 'username' not in session: 
+        return redirect(url_for('logins'))
 
     #get session data
     username = session.get('username')
@@ -218,27 +216,17 @@ def room(gameCode):
 
     return render_template('room.html', gameCode=gameCode, username=username)
 
-
 # socketio event once client connects
 @socketio.on('joinRoom')
 def joinRoom(data):
-    # NEEDS FIXING | refresh case
     gameCode = int(data['gameCode'])
     username = data['username']
     game = gameManager.getGame(gameCode)
     players = game.getPlayers()
-    if gameCode not in gameManager.games:
-        return redirect(url_for('home'))
-    
-    activeUsernames = [player.getUsername() for player in players.values()]
 
-    if username in activeUsernames:         # if refreshed!
-        print('already in here mate!')
-        game.playerRefresh(request.sid, username)
-    
-    if len(players) > 2: 
-        print('TOO MANY PLAYERS')
-    
+    # check the join is valid 
+    if gameCode not in gameManager.games or len(players) >= 2:
+        return redirect(url_for('home'))
     else:
         # 1 | add player to the socketio room
         join_room(int(data['gameCode']))
@@ -255,7 +243,7 @@ def joinRoom(data):
             connection.execute(text("INSERT INTO gameParticipants (gameID, userID) VALUES (:gameID, :userID)"), {'gameID':gameID, 'userID':userID[0]})
             connection.commit()
 
-
+# begin game following button press
 @socketio.on('startGame')
 def startGame(data):
     gameCode = int(data['gameCode'])
@@ -267,15 +255,15 @@ def startGame(data):
         game.beginGame()
 
         player = playersList[0] 
-        player1Info = f"{player.getUsername()}, {player.getSID()}, {player.getScore()}"
+        player1Info = f"{player.getUsername()}: {player.getScore()}"
         player = playersList[1] 
-        player2Info = f"{player.getUsername()}, {player.getSID()}, {player.getScore()}"
+        player2Info = f"{player.getUsername()}: {player.getScore()}"
         playerTurn = game.getPlayerTurn()
         usernameTurn = game.getPlayer(playerTurn).getUsername()
         socketio.emit('beginGameFrontEnd', {'player1Info':player1Info, 'player2Info':player2Info, 'playerTurn':usernameTurn}, to=gameCode)
         socketio.emit('enableThrow', {}, to=playerTurn)
     else:
-        print('not enough in room')
+        socketio.emit('clientError', {'errorMessage': 'Not enough players to start the game!'}, to=request.sid)
 
 # show throw on other user screen
 @socketio.on('sendThrowForOtherUser')
@@ -291,6 +279,7 @@ def handleThrowForOtherUser(data):
 
     socketio.emit('receiveOtherUserThrow', {'target': data['target']}, to=nonPlayerSID)
 
+# receive score and update 
 @socketio.on('sendScore')
 def handleScore(data):
     # this function is called once a throw has been made, and score sent. 
@@ -312,8 +301,8 @@ def handleScore(data):
         
         # prepare info to send as emit
 
-        player1Info = f"{player1.getUsername()}, {player1.getSID()}, {player1.getScore()}"
-        player2Info = f"{player2.getUsername()}, {player2.getSID()}, {player2.getScore()}"
+        player1Info = f"{player1.getUsername()}: {player1.getScore()}"
+        player2Info = f"{player2.getUsername()}: {player2.getScore()}"
         playerTurn = game.getPlayerTurn()
         usernameTurn = game.getPlayer(playerTurn).getUsername()
 
@@ -450,9 +439,6 @@ def shop():
         
         dataToSend = {}
 
-
-
-
     dataToSend = {}
     with engine.connect() as connection:
         # 0 | get user currency 
@@ -481,6 +467,7 @@ def shop():
 
 
         connection.commit()
+
 
 
     return render_template("shop.html", dataToSend=dataToSend, username=username)

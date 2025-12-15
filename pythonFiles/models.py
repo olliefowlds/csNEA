@@ -41,21 +41,7 @@ class Game:
     def removePlayer(self, sid):
         self.players.pop(sid)
 
-    def playerRefresh(self, newSID, username):
-        # find and remove current player stored 
-        try:
-            for oldSID in self.getPlayers():
-                if self.getPlayer(oldSID).getUsername() == username: 
-                    print('match')
 
-                    clonedPlayer = Player(username, newSID)
-                    clonedPlayer.score = self.getPlayer(oldSID).getScore()
-                    clonedPlayer.dartsThrown = self.getPlayer(oldSID).getDartsThrown()
-                    self.removePlayer(oldSID)
-                    self.addPlayer(clonedPlayer)
-        except: 
-            # once player swapped, an error is thrown since the keys in self.getPlayers() is updated.
-            return
 
                 
 
@@ -139,25 +125,19 @@ class Player:
     def resetDartsThrown(self): self.dartsThrown = 0
 
 
+
 if __name__ == "__main__": 
 
+    g = Game("1111")
+    p1 = Player("Alice", "001")
+    p2 = Player("Bob", "002")
+    g.addPlayer(p1)
+    g.addPlayer(p2)
 
-    #for tests
-    gameManager = GameManager()
-    
-    newGame = Game("1234")
-    gameManager.addGame(newGame)
+    print(g)
+    print(g.getPlayer("001"))
 
-    print(newGame.isFull())
+    g.playerRefresh("003", "Alice")
 
-    player1 = Player("Alice", "SID1")
-    player2 = Player("Bob", "SID2")
-
-
-    newGame.addPlayer(player1)
-    newGame.addPlayer(player2)
-
-    newGame.beginGame()
-
-    print(newGame.isFull())
-
+    print(g)
+    print(g.getPlayer("003"))

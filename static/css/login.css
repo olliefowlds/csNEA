@@ -1,0 +1,73 @@
+body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    background: #fff;
+}
+
+
+.main-body {
+    text-align: center;
+    width: 50%;
+}
+
+.main-body h1 {
+    font-weight: normal;
+    margin-bottom: 30px;
+}
+
+.input-field {
+    width: 50%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #81F3AB;
+    border-radius: 3px;
+    text-align: center;
+    background-color: white;
+    color: black; 
+    font-size: 14px;
+}
+
+.input-field:focus {
+    border: 2px solid #3ED174;
+    outline: none;  
+    color: black; 
+}
+.input-field::placeholder {
+    color: black;
+    opacity: 1;
+}
+
+.submit-btn {
+    width: 10%;
+    padding: 5px;
+    border: 1px solid #3ED174;
+    background: #81F3AB;
+    cursor: pointer;
+    font-size: 14px;
+    border-radius: 3px;
+}
+
+.submit-btn:hover {
+    background: #3ED174;
+}
+
+
+
+
+
+
+/* Primary: #FF4F4F (Punchy red — dartboard bullseye feeling)
+
+Secondary: #FFE478 (Cheery gold/yellow)
+Secondary more pale: FFEFAD
+
+Accent: #3EC0FF (Sky blue pop)
+
+Background: #F9F9F9 (Soft white)
+
+Dark Contrast: #1E1E1E (UI outlines/text) */

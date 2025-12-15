@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My first three.js app</title>
+    <title>In Game</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/room.css') }}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.3/socket.io.js"></script>
     <script type="importmap">
@@ -18,9 +18,21 @@
   </head>
   <body>
     <div class="header-container">
-      <p>Welcome {{ username }}! &nbsp;&nbsp; Join with this code: {{ gameCode }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
-      <button onclick="window.location.href='{{ url_for('home') }}'">Back to Home</button>
+      <div class="headpart welcome">
+        <p>Welcome {{ username }}!</p>
+      </div>
+      <div class="code">
+        <p id="roomCodeP">Join with this code: {{ gameCode }}</p>
+        <p id="playerTurnP">It's <span id="playerTurnSpan"></span>'s turn!</p>
+      </div> 
+      <div class="exit">
+        <button onclick="window.location.href='{{ url_for('home') }}'">Back to Home</button>
+      </div>
     </div>
+
+    <div id="errorMessage" class="errorMessage"><p></p></div>
+
+    <button id="resetDartPos" class="resetDartPos">Reset Dart Position</button>
 
     <div class="main-container">
       <canvas id="c"></canvas>
@@ -28,28 +40,19 @@
 
     <div class="info-container">
       <div class="left-side">
-        <button id="startGame" type="button">Start Game</button>
+        <button id="startGame" type="button" class="start-btn">Start Game</button>
 
-        <div class="playerTurn-div" id="playerTurnDiv">
-          It's <span id="playerTurnSpan"></span>'s turn!
-        </div>
-
-
-      </div>
-      <div class="middle">    
-        <div>
-            <label for="scoreInput">Score:</label>
-            <input type="number" id="scoreInput" name="scoreInput" value="0">
-            <button id="sendScoreBtn">Send Score!</button>
-                <p><span id="player1ScoreSpan"></span></p>
-                <p><span id="player2ScoreSpan"></span></p>
-                
+        <div class="score-wrapper" id="scoreContainerDiv">
+            <div class="player1Score"><span id="player1ScoreSpan"></span></div>
+            <div class="player2Score"><span id="player2ScoreSpan"></span></div>
         </div>
       </div>
 
       <div class="right-side">
-        <p>You just threw a <span id="mostRecentScoreSpan"></span></p>
-        <button id="resetDartPos">Reset Dart Position</button>
+        <div class="throw-score-wrapper">
+          <p>Most Recent Throw:</p>
+          <span class="mostRecentScoreSpan" id="mostRecentScoreSpan"></span>
+        </div>
       </div>
     </div>
 
@@ -67,3 +70,9 @@
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
   </body>
 </html>
+
+
+
+<!-- <label for="scoreInput">Score:</label>
+<input type="number" id="scoreInput" name="scoreInput" value="0">
+<button id="sendScoreBtn">Send Score!</button> -->

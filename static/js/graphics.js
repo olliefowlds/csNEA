@@ -63,7 +63,7 @@ export function boardSetUp(gltfLoader, scene) {
   
   // create a cirlce to go behind the board 
   const circleGeometry = new THREE.CircleGeometry(28, 64);
-  const circleMaterial = new THREE.MeshBasicMaterial({ color: 0xE4080A, side: THREE.DoubleSide });
+  const circleMaterial = new THREE.MeshBasicMaterial({ color: 0xFF4F4F, side: THREE.DoubleSide });
   const boardPadding = new THREE.Mesh(circleGeometry, circleMaterial);
   boardPadding.position.set(dartboardPosition.x+0.5, dartboardPosition.y, dartboardPosition.z);
   boardPadding.rotation.y = Math.PI / 2;
@@ -100,7 +100,7 @@ export function addDart(gltfLoader, scene) {
 export function roomSetUp(scene) {
   // back wall AS DEFINED AT TOP 
   const backWallGeometry = new THREE.PlaneGeometry(600, dartboardPosition.y*2.2);
-  const backWallMaterial = new THREE.MeshBasicMaterial({ color: 0xCFE5FF, side: THREE.DoubleSide });
+  const backWallMaterial = new THREE.MeshBasicMaterial({ color: 0xD2FCE2, side: THREE.DoubleSide });
   backWall = new THREE.Mesh(backWallGeometry, backWallMaterial);
   backWall.position.set(dartboardPosition.x+1, dartboardPosition.y, dartboardPosition.z);
   backWall.rotation.y = Math.PI / 2; // Rotate to face the camera
@@ -108,7 +108,7 @@ export function roomSetUp(scene) {
 
   // side walls 
   const sideWallGeometry = new THREE.PlaneGeometry(500, dartboardPosition.y*2.2)
-  const sideWallMaterial = new THREE.MeshBasicMaterial({ color: 0x8FC1FF, side: THREE.DoubleSide });
+  const sideWallMaterial = new THREE.MeshBasicMaterial({ color: 0x3ED174, side: THREE.DoubleSide });
   let leftWall = new THREE.Mesh(sideWallGeometry, sideWallMaterial);
   leftWall.position.set(dartboardPosition.x/2,dartboardPosition.y,-300)
   leftWall.rotation.z = Math.PI / 2;
@@ -121,7 +121,7 @@ export function roomSetUp(scene) {
 
   // floor and ceiling
   const floorGeometry = new THREE.PlaneGeometry(500, 600);
-  const floorMaterial = new THREE.MeshBasicMaterial({ color: 0x5281BA, side: THREE.DoubleSide });
+  const floorMaterial = new THREE.MeshBasicMaterial({ color: 0x44895D, side: THREE.DoubleSide });
   const floor = new THREE.Mesh(floorGeometry, floorMaterial);
   floor.position.set(0, 0, 0);
   floor.rotation.x = -Math.PI / 2; // Rotate to face upwards
