@@ -22,14 +22,10 @@ function getInitialVelocities(startPos, target) {
     return [ux, uy, uz];
 }
 
-
 function calcNextPos(startPos, velocities, t, positionsArr = []) {
     positionsArr.push(startPos.clone()); 
-
     let [ux, uy, uz] = velocities;
     let g = 981 // cm/s^2
-
-
 
     // if next iteration is to be at the dartboard
     if ((startPos.x + ux*t) >= dartboardPosition.x) {
@@ -66,9 +62,6 @@ function calcNextPos(startPos, velocities, t, positionsArr = []) {
     }
 
 }
-
-
-
 
 
 export { getInitialVelocities, calcNextPos };

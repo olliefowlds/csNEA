@@ -4,8 +4,8 @@ body {
     margin: 0;
     padding: 0;
     height: 100vh;
-    font-family: Arial, sans-serif;
-    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #f4f6f8;
 }
 .header-container{
     display: flex;
@@ -17,9 +17,6 @@ body {
     padding: 0 1rem;    
     box-sizing: border-box;
 }
-
-/* .welcome{} */
-/* .sign-out-container{} */
 
 .sign-out-btn {
     padding: 10px;

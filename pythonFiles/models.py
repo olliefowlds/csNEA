@@ -1,13 +1,10 @@
 class GameManager:
     def __init__(self):
         self.games = {}                 # gameCode : Game 
-    
     def addGame(self, game): self.games[game.gameCode] = (game)
-
     def getGame(self, gameCode): return self.games[gameCode]
+    def terminateGame(self, gameCode): self.games.pop(gameCode)
     
-
-
 class Game:
     def __init__(self, gameCode):
         self.gameCode = gameCode
@@ -29,30 +26,20 @@ class Game:
     def setGameState(self, state): self.gameState = state
     def setPlayerTurn(self, sid): self.playerTurn = sid
 
-    def isFull(self):
-        if len(self.getPlayers()) == 2:
-            return True
-        return False
+    def isFull(self): return (len(self.getPlayers()) == 2)
 
     def addPlayer(self, player):
         if not(len(self.players) >= 2):
             self.players[player.sid] = player
     
-    def removePlayer(self, sid):
-        self.players.pop(sid)
-
-
-
-                
-
+    def removePlayer(self, sid): self.players.pop(sid)
 
     def beginGame(self):
-        if self.getGameState() != "isReady": return
-
+        if self.getGameState() != "isReady": return     # check game is ready 
         self.setGameState("inProgress")
         for player in self.getPlayers().values():                # set every player's score to 501 
             player.score = 501
-        self.setPlayerTurn( list(self.getPlayers().keys())[0] )      # set first player's turn to be the first player in the dict
+        self.setPlayerTurn( list(self.getPlayers().keys())[0] )      # set first player's turn
 
     def recordThrow(self, sid, score, isDouble):
         player = self.getPlayers()[sid]
@@ -79,7 +66,6 @@ class Game:
         # 4 | three darts thrown/ bust: reset and change turn 
         if player.getDartsThrown() >= 3 or (currentScore - score < 2):
             player.resetDartsThrown()
-
             # THIS WILL TRIP IF THERE ARE THREE PLAYRES IN A GAME OBJECT -- WHICH SHOULD NOT HAPPEN ANYWAYS REALLY
             players = self.getPlayers()
             for playerSID in players.keys():
@@ -101,11 +87,6 @@ class Game:
     def endGame(self):
         if self.getGameState() != "gameOver": return
         print("Game Over")
-        # ship off to database self.setGameState("archived")
-        
-
-    def __str__(self):
-        return (f'Game: code {self.gameCode}, players {self.players}, state {self.gameState}, turn {self.playerTurn}')
 
 class Player: 
     def __init__(self, username, sid):
@@ -125,7 +106,7 @@ class Player:
     def resetDartsThrown(self): self.dartsThrown = 0
 
 
-
+# for testing 
 if __name__ == "__main__": 
 
     g = Game("1111")

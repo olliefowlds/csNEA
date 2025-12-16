@@ -1,10 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-
 import { getInitialVelocities, calcNextPos } from './throwPhysics.js';
 import { getPoints } from './getPoints.js';
-
 
 const dartboardPosition = new THREE.Vector3(237, 173, 0);
 const dartThrowingPosition = new THREE.Vector3(0, 170, 0);
@@ -12,25 +10,19 @@ const dartCamStartPos = new THREE.Vector3(dartThrowingPosition.x - 10, dartThrow
 const startingspeed = 2000;
 const timeInterval = 0.001; 
 let target = new THREE.Vector3(237,173,0); // Initialize mouse target
-
 let dartboard; // define dartboard globally 
 let dartWrapper = new THREE.Object3D(); // dart and dartWrapper aswell 
-let dart; 
+let dart; // define dart globally 
 let backWall; // backwall declared globally as required for raycasting
-
 
 const canvas = document.querySelector('#c');
 const canvasWidth = canvas.clientWidth;
 const canvasHeight = canvas.clientHeight;
-
 let camera
 let renderer
 const scene = new THREE.Scene();
-
 let mouse = new THREE.Vector2();
 const raycaster = new THREE.Raycaster();
-
-
 let mostRecentScore = 0
 let isDouble 
 
@@ -47,11 +39,9 @@ export function cameraSetUp() {
   camera.lookAt(dartboardPosition);
   camera.aspect = canvasWidth / canvasHeight;
   camera.updateProjectionMatrix();
-
-
   return camera
   }
-export function boardSetUp(gltfLoader, scene) {
+function boardSetUp(gltfLoader, scene) {
   // import dart board and position it at 237,0,0
   gltfLoader.load(window.Dartboard_Path, (gltfScene) => {
     dartboard = gltfScene.scene;
@@ -68,9 +58,8 @@ export function boardSetUp(gltfLoader, scene) {
   boardPadding.position.set(dartboardPosition.x+0.5, dartboardPosition.y, dartboardPosition.z);
   boardPadding.rotation.y = Math.PI / 2;
   scene.add(boardPadding);
-  
 }
-export function addDart(gltfLoader, scene) {
+function addDart(gltfLoader, scene) {
   // import dart and position it at 1,0,0
   gltfLoader.load(window.Dart_Path, (gltfScene) => {
     dart = gltfScene.scene;
@@ -78,7 +67,6 @@ export function addDart(gltfLoader, scene) {
     scene.add(dartWrapper);
     dartWrapper.scale.set(0.1, 0.1, 0.1);
     dart.rotation.set(Math.PI/2, 0, Math.PI/2);
-    
     // set the dart's relative position to be it's tip
     dartWrapper.traverse((child) => {
       if (child.isMesh) {
@@ -92,12 +80,9 @@ export function addDart(gltfLoader, scene) {
     });
     dartWrapper.position.set(dartThrowingPosition.x, dartThrowingPosition.y, dartThrowingPosition.z);
     dartWrapper.lookAt(dartboardPosition.x,dartboardPosition.y,dartboardPosition.z); // Make dart look at the board
-
-
-
   });
   }
-export function roomSetUp(scene) {
+function roomSetUp(scene) {
   // back wall AS DEFINED AT TOP 
   const backWallGeometry = new THREE.PlaneGeometry(600, dartboardPosition.y*2.2);
   const backWallMaterial = new THREE.MeshBasicMaterial({ color: 0xD2FCE2, side: THREE.DoubleSide });
@@ -132,39 +117,56 @@ export function roomSetUp(scene) {
   scene.add(celing);
 
   }
-export function calcCameraOffset(pos) {
-  // figure out this bastard
-  // something must be done with the z coord... figure out the maths!!!
+export function initGraphics() {
+    renderer = canvasRenderSetUp();
+    camera = cameraSetUp();
+    const gltfLoader = new GLTFLoader();
+
+    // create two lights that sit behind the camera
+    {
+      const color = 0xFFFFFF;
+      const intensity = 5;
+      const light = new THREE.DirectionalLight( color, intensity );
+      light.position.set( -5, 0, 0);
+      scene.add( light );
+    }
+    {
+      const color = 0xFFFFFF;
+      const intensity = 5;
+      const light = new THREE.DirectionalLight( color, intensity );
+      light.position.set(dartboardPosition.x+5, dartboardPosition.y, dartboardPosition.z);
+      scene.add( light );
+    }
+
+    // handle window resize
+    window.addEventListener('resize', () => {
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        renderer.setSize(width, height, false);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+    });
+
+    boardSetUp(gltfLoader, scene)
+    addDart(gltfLoader, scene);
+    roomSetUp(scene)
+    renderer.render(scene, camera);
+    function render(time) {
+      renderer.render(scene, camera);
+      requestAnimationFrame(render);
+    }
+
+    requestAnimationFrame(render);
 }
 
-// makes dart look at where mouse is pointing using raycasting and this video 
-// https://www.youtube.com/watch?v=Zia-0PRgFPc
-// explain raycasting in document. 
+// makes dart look at where mouse is pointing using raycasting
 export function getLookAtPos(event) {
-
-  // RELATIVE TO WHOLE WINDOW NOT RELATIVE TO JUST THE CANVAS
-  // mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  // mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-  // raycaster.setFromCamera(mouse, camera);
-  // const intersects = raycaster.intersectObject(backWall, true);
-  // if (intersects.length > 0) {
-  //   const point = intersects[0].point;
-  //   target.x = point.x;
-  //   target.y = point.y;
-  //   target.z = point.z;
-  // }
-  // return target
-
-
-
   const rect = canvas.getBoundingClientRect(); // get canvas position and size
   const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
   const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
   mouse.x = x;
   mouse.y = y;
-
   raycaster.setFromCamera(mouse, camera);
   const intersects = raycaster.intersectObject(backWall, true);
   if (intersects.length > 0) {
@@ -173,12 +175,10 @@ export function getLookAtPos(event) {
   }
   return target
 }
-
 export function handleMousemove(event) {
   target = getLookAtPos(event);
   dartWrapper.lookAt(target);
 }
-
 export function handleMouseclick(event) {
   return new Promise(resolve => {
 
@@ -198,9 +198,6 @@ export function handleMouseclick(event) {
 
   });
 } 
-
-
-
 function getFlightInfo(target) {
   // using throwPhysics.js, calc the initial velocities based off mouse pos and then find the flight path. 
   const initialVelocities = getInitialVelocities(dartThrowingPosition, target);
@@ -208,7 +205,6 @@ function getFlightInfo(target) {
   let finalPos = path[path.length - 1];
   return [path, finalPos]
 }
-
 function animatePath(i, path, cameraOffset, finalPos, onComplete) {
   if (i < path.length) {
 
@@ -251,7 +247,6 @@ function animatePath(i, path, cameraOffset, finalPos, onComplete) {
     if (onComplete) onComplete();
   }
 }
-
 export function handleOtherUserThrow(target) {
   // get flight path using throwPhysics.js
   let path, finalPos
@@ -262,21 +257,6 @@ export function handleOtherUserThrow(target) {
   let i = 0;
   animatePath(i, path, cameraOffset, finalPos);
 }
-
-
-export function respawn() {
-  console.log('resetting')
-  dartWrapper.position.set(dartThrowingPosition.x, dartThrowingPosition.y, dartThrowingPosition.z);
-  dartWrapper.lookAt(dartboardPosition.x,dartboardPosition.y,dartboardPosition.z); // Make dart look at the board
-  console.log(dartWrapper.position)
-  
-  camera.position.set(dartCamStartPos.x, dartCamStartPos.y, dartCamStartPos.z);
-  camera.lookAt(dartboardPosition);
-  console.log(dartCamStartPos)
-  console.log('vs')
-  console.log(camera.position)
-}
-
 export function resetDartPos() {
   // this is triggered by button press 
   // reset dart and point it at board
@@ -287,93 +267,3 @@ export function resetDartPos() {
   camera.position.set(dartCamStartPos.x, dartCamStartPos.y, dartCamStartPos.z);
   camera.lookAt(dartboardPosition);
 }
-
-
-
-
-export function initGraphics() {
-    renderer = canvasRenderSetUp();
-    camera = cameraSetUp();
-    
-    const gltfLoader = new GLTFLoader();
-
-    // create two lights that sit behind the camera
-    {
-      const color = 0xFFFFFF;
-      const intensity = 5;
-      const light = new THREE.DirectionalLight( color, intensity );
-      light.position.set( -5, 0, 0);
-      scene.add( light );
-    }
-    {
-      const color = 0xFFFFFF;
-      const intensity = 5;
-      const light = new THREE.DirectionalLight( color, intensity );
-      light.position.set(dartboardPosition.x+5, dartboardPosition.y, dartboardPosition.z);
-      scene.add( light );
-    }
-
-    boardSetUp(gltfLoader, scene)
-    addDart(gltfLoader, scene);
-    roomSetUp(scene)
-
-    // look out for window resizing 
-    window.addEventListener('resize', () => {
-      const width = canvas.clientWidth;
-      const height = canvas.clientHeight;
-      renderer.setSize(width, height, false);
-      renderer.setPixelRatio(window.devicePixelRatio);
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-    });
-
-
-    // temp M and L keys for testing
-    document.addEventListener('keydown', (event) => {
-      switch (event.code) {
-        case 'KeyM':
-          camera.position.set(dartCamStartPos.x, dartCamStartPos.y, dartCamStartPos.z);
-          camera.lookAt(dartboardPosition.x, camera.position.y, camera.position.z)
-          break;
-        case 'KeyL':
-          camera.position.set(dartWrapper.position.x - 50, dartWrapper.position.y, dartWrapper.position.z);
-          camera.lookAt(dartboardPosition.x, camera.position.y, camera.position.z)
-          break;
-      }
-    });
-
-
-    let rotateRight = true
-    renderer.render(scene, camera);
-    function render(time) {
-      renderer.render(scene, camera);
-
-
-      // rotate animation while waiting for mouse to be on screen ?? 
-      // if (target.z > 100) {
-      //   rotateRight = false; // Stop rotating when target is too far
-      // } else if (target.z < -100) {
-      //   rotateRight = true; // Reverse direction when target is too close
-      // }
-
-      // if (rotateRight) {
-      //   target.z += 1; // Rotate the dart to the right
-      // } else {
-      //   target.z -= 1; // Rotate the dart to the left
-      // }
-      
-      // dartWrapper.lookAt(target);
-
-
-      requestAnimationFrame(render);
-    }
-
-    requestAnimationFrame(render);
-
-
-}
-
-
-
-
-

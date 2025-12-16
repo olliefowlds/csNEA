@@ -151,8 +151,6 @@ def createNewGame(username):
     # 4 | add new field into tbl gameParticipants in db, including the user who created the game. 
         userID = connection.execute(text('SELECT userID from users WHERE username = :username'), {'username':username}).fetchone()
         gameID = connection.execute(text('SELECT MAX(gameID) from games')).fetchone()
-        # for some reason these variables are tuples!!!
-        connection.execute(text("INSERT INTO gameParticipants (gameID, userID) VALUES (:gameID, :userID)"), {'gameID':gameID[0], 'userID':userID[0]})
         connection.commit()
 
     # 5 | set game object's gameID 
@@ -208,7 +206,7 @@ def home():
 @app.route('/room/<int:gameCode>')
 def room(gameCode):
     if 'username' not in session: 
-        return redirect(url_for('logins'))
+        return redirect(url_for('login'))
 
     #get session data
     username = session.get('username')
@@ -285,6 +283,7 @@ def handleScore(data):
     # this function is called once a throw has been made, and score sent. 
     # if in game, the game object will be updated; then check for game over, if so find the winner
 
+    # get info 
     gameCode = int(data['gameCode'])
     game = gameManager.getGame(gameCode)
     players = game.getPlayers()                     
@@ -306,13 +305,7 @@ def handleScore(data):
         playerTurn = game.getPlayerTurn()
         usernameTurn = game.getPlayer(playerTurn).getUsername()
 
-
         socketio.emit('scoreUpdate', {'player1Info':player1Info, 'player2Info':player2Info, 'playerTurn':usernameTurn}, to=gameCode)
-        
-        # # wont immeditaely enable throw, must wait until the user clicks the reset button (unless first go)
-        # playerTurnObject = game.getPlayer(playerTurn)
-        # if playerTurnObject.getDartsThrown() == 0: # if first throw,
-        #     socketio.emit('enableThrow', {}, to=playerTurn)
         socketio.emit('enableDartResetPosBtn', {}, to=playerTurn)
 
     if game.getGameState() == 'gameOver': #if game over, find winner, update db, and terminate 
@@ -324,7 +317,7 @@ def handleScore(data):
             winner = player2
             loser = player1 
 
-        # 2 | update games to set wasCompleted to true, and set winner in gameParticipants
+        # 2 | update games to set wasCompleted to true, and set winner in gameParticipants. 
         gameID = game.getGameID()
         with engine.connect() as connection:
             connection.execute(text("UPDATE games SET wasCompleted = TRUE WHERE gameID = :gameID"), {'gameID':gameID})
@@ -334,8 +327,14 @@ def handleScore(data):
             connection.execute(text("UPDATE gameParticipants SET isWinner = FALSE WHERE gameID = :gameID AND userID = :userID"), {'gameID': gameID, 'userID': loserID})
             connection.commit()
 
-        # 3 | emit terminateGame
+        # 3 | give currecny
+            connection.execute(text("UPDATE users SET currency = currency + 200 WHERE userID = :userID"), {'userID': winnerID})
+            connection.execute(text("UPDATE users SET currency = currency + 100 WHERE userID = :userID"), {'userID': loserID})
+
+        # 4 | emit errorMessage (saying game over) and terminateGame
+        socketio.emit('clientError', {'errorMessage': f'Game Over! {winner.getUsername()} wins!'}, to=gameCode)
         socketio.emit('terminateGame', {'winner':winner.getUsername()}, to=gameCode)
+        gameManager.terminateGame(gameCode)
 
 # when player 1 resets dart pos, reset player 2's aswell 
 @socketio.on('resetDartPos')

@@ -1,127 +1,33 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { canvasRenderSetUp, cameraSetUp, boardSetUp, addDart, roomSetUp, calcCameraOffset, getLookAtPos, handleMousemove, handleMouseclick, handleOtherUserThrow, respawn, resetDartPos } from './graphics.js'
+import { canvasRenderSetUp, cameraSetUp, handleMousemove, handleMouseclick, handleOtherUserThrow, resetDartPos, initGraphics } from './graphics.js'
 
 
-const dartboardPosition = new THREE.Vector3(237, 173, 0);
-const dartThrowingPosition = new THREE.Vector3(0, 170, 0);
-const dartCamStartPos = new THREE.Vector3(dartThrowingPosition.x - 10, dartThrowingPosition.y + 3, dartThrowingPosition.z) // (-10,173,0)
-const startingspeed = 2000;
-const timeInterval = 0.001; 
 let target = new THREE.Vector3(237,173,0); // Initialize mouse target
-let dartboard; // define dartboard globally 
-let dartWrapper = new THREE.Object3D(); // dart and dartWrapper aswell 
-let dart; 
-let backWall; // backwall declared globally as required for raycasting
 const canvas = document.querySelector('#c');
-const canvasWidth = canvas.clientWidth;
-const canvasHeight = canvas.clientHeight;
 let camera
 let renderer
-const scene = new THREE.Scene();
-let mouse = new THREE.Vector2();
-const raycaster = new THREE.Raycaster();
 renderer = canvasRenderSetUp();
 camera = cameraSetUp();
-const gltfLoader = new GLTFLoader();
-
 let mostRecentScore = 0
 
-// create two lights that sit behind the camera
-{
-    const color = 0xFFFFFF;
-    const intensity = 5;
-    const light = new THREE.DirectionalLight( color, intensity );
-    light.position.set( -5, 0, 0);
-    scene.add( light );
-}
-{
-    const color = 0xFFFFFF;
-    const intensity = 5;
-    const light = new THREE.DirectionalLight( color, intensity );
-    light.position.set(dartboardPosition.x+5, dartboardPosition.y, dartboardPosition.z);
-    scene.add( light );
-}
 
-boardSetUp(gltfLoader, scene)
-addDart(gltfLoader, scene);
-roomSetUp(scene)
-
-// look out for window resizing 
-window.addEventListener('resize', () => {
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
-    renderer.setSize(width, height, false);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-});
+// call grapics.js main function to set up scene. 
+initGraphics() 
 
 
-// temp M and L keys for testing
-document.addEventListener('keydown', (event) => {
-    switch (event.code) {
-    case 'Space':
-        respawn()
-    }
-});
-
-
-
-
-
-let rotateRight = true
-renderer.render(scene, camera);
-function render(time) {
-    renderer.render(scene, camera);
-
-
-    // rotate animation while waiting for mouse to be on screen ?? 
-    // if (target.z > 100) {
-    //   rotateRight = false; // Stop rotating when target is too far
-    // } else if (target.z < -100) {
-    //   rotateRight = true; // Reverse direction when target is too close
-    // }
-
-    // if (rotateRight) {
-    //   target.z += 1; // Rotate the dart to the right
-    // } else {
-    //   target.z -= 1; // Rotate the dart to the left
-    // }
-    
-    // dartWrapper.lookAt(target);
-
-
-    requestAnimationFrame(render);
-}
-
-requestAnimationFrame(render);
-
-
-
-
-
-
-
-
-
-// !!! ALL THINGS SOCKETIO 
+// SOCKETIO side
 // Connect to Flask Socket.IO
-// const socket = io("http://192.168.0.233:5000");
-const socket = io("http://127.0.0.1:5000");
+// const socket = io("http://192.168.0.233:5000");  // :: for local network
+const socket = io("http://127.0.0.1:5000");         // :: for local host
 
-// const gameCode : global variable passed through room.html page
-// const username : global variable passed through room.html page
 
 socket.on('connect', () => {
     socket.emit('joinRoom', {'gameCode': gameCode, 'username': username})
 })
 
-// all things input button
+// html elements 
 const startGameButton = document.getElementById('startGame')
-const scoreInput = document.getElementById("scoreInput")
-const sendScoreBtn = document.getElementById("sendScoreBtn")
-// const scoreDisplaySpan = document.getElementById("scoreDisplaySpan")
 const scoreContainerDiv = document.getElementById("scoreContainerDiv")
 const player1ScoreSpan = document.getElementById("player1ScoreSpan")
 const player2ScoreSpan = document.getElementById("player2ScoreSpan")
@@ -133,22 +39,16 @@ const playerTurnP = document.getElementById('playerTurnP')
 const errorMessageDiv = document.getElementById('errorMessage')
 const resetDartPosBtn = document.getElementById('resetDartPos')
 let isDouble
-let resultsArray 
+let resultsArray
+let errorTimeout
 
 startGameButton.addEventListener("click", startGame)
-// sendScoreBtn.addEventListener("click", sendScore)
-
-
 
 async function handleMouseclickEventHandler(e) {
     disableDartThrow()
     disableDartResetPosBtn()
-
-    // need to create a promise here so that animation must be complete first 
     resultsArray = await handleMouseclick(e)
-    // execute after hangleMouseClick
-
-    console.log('finished waiting')
+    // execute after handleMouseClick:
     mostRecentScore = resultsArray[0]
     isDouble = resultsArray[1]
     target = resultsArray[2]
@@ -157,57 +57,39 @@ async function handleMouseclickEventHandler(e) {
     socket.emit('sendScore', {'score': mostRecentScore, 'gameCode': gameCode, 'isDouble':isDouble})
 }
 
-
 function enableDartResetPosBtn() {
     // calls reset dart pos function from graphics.js
     resetDartPosBtn.addEventListener("click", resetDartPosHandler)
     resetDartPosBtn.style.display = "block"
-
 }
-
 function disableDartResetPosBtn() {
     resetDartPosBtn.removeEventListener("click", resetDartPosHandler)
     resetDartPosBtn.style.display = "none"
 }
-
 function resetDartPosHandler() {
     socket.emit('resetDartPos', {'gameCode': gameCode})
     resetDartPos()
     enableDartThrow()
 }
-
 function resetDartPosForOtherUser() {
     resetDartPos()
 }
-
 function enableDartThrow() {
-    console.log('throw enabled through enableDartThrow')
     canvas.addEventListener('mousemove', handleMousemove)
     canvas.addEventListener('mousedown', handleMouseclickEventHandler)
 }
-
 function disableDartThrow() {
-    console.log('disabled')
     canvas.removeEventListener('mousemove', handleMousemove)
     canvas.removeEventListener('mousedown', handleMouseclickEventHandler)
 }
-
 function startGame() {
     socket.emit('startGame', {'gameCode': gameCode})
 }
 
-function sendScore() {
-    console.log(`Sending score ${scoreInput.value} for user ${username} in game ${gameCode}`)
-    socket.emit('sendScore', {'score': scoreInput.value, 'gameCode': gameCode, 'isDouble':true})
-}
-
-
+// socket event handlers 
 socket.on("connect", () => {
     resetDartPosBtn.style.display = "none"
-
 });
-
-
 socket.on('beginGameFrontEnd', (data) => {
     roomCodeP.style.display = "none"
     playerTurnP.style.display = "block"
@@ -218,18 +100,14 @@ socket.on('beginGameFrontEnd', (data) => {
     startGameButton.style.display = "none"
     playerTurnDiv.style.display = "block"
 })
-
 socket.on('scoreUpdate', (data) => {
     player1ScoreSpan.innerText = data.player1Info
     player2ScoreSpan.innerText = data.player2Info
     playerTurnSpan.innerText = data.playerTurn
 })
-
 socket.on('enableDartResetPosBtn', (data) => {
-    console.log('enabling the button')
     enableDartResetPosBtn()
 })
-
 socket.on('enableThrow', (data) => {
     enableDartThrow()
 })
@@ -238,19 +116,13 @@ socket.on('disableThrow', (data) => {
 })
 socket.on('terminateGame', (data) => {
     disableDartThrow()
-    console.log(data.winner, 'is the winner!')
 })
-
 socket.on('receiveOtherUserThrow', (data) => {
-    console.log(data.target)
     handleOtherUserThrow(data.target)
 })
-
 socket.on('resetDartPosForOtherUser', (data) => {
     resetDartPosForOtherUser()
 })
-
-let errorTimeout
 socket.on('clientError', (data) => {
     clearTimeout(errorTimeout)
     errorMessageDiv.style.display = "block";
