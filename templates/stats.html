@@ -15,7 +15,6 @@
         <button class="home-btn" onclick="window.location.href='{{ url_for('home') }}'">Back to Home</button>
       </div>
     </div>
-
     <div class="main">
         <h1>Player Statistics</h1>
         <p>Here are the statistics for {{username}}</p>
@@ -35,9 +34,7 @@
                 </tr>
             </tbody>
         </table>
-    
         <h1>Global Statistics</h1>
-    
         <form method="POST" action="">
             <label for="rankBy">Rank by:</label>
             <select title="rankBy" name="rankBy" id="rankBy">
@@ -47,7 +44,6 @@
             </select>
             <input type="submit" value="Search">
         </form>
-    
         <table>
         <thead>
             <tr>

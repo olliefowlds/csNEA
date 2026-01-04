@@ -10,7 +10,7 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = "olliesSuperSecretKey"
 # set up sockets 
 socketio = SocketIO(app, cors_allowed_origins="*")
-# set up db
+# set up db and create tables
 engine = create_engine('sqlite:///dartsDB.db', echo=False)
 with engine.connect() as connection:
     connection.execute(text("""
@@ -73,13 +73,10 @@ def login():
         # get username and password
         username = request.form.get('username')
         password = request.form.get('password')
-
         with engine.connect() as connection: 
             user = None # set to none before search starts 
             # look for user with matching username and password
             user = connection.execute(text("SELECT * from users WHERE username = :username"), {"username": username}).fetchone()
-            
-            
             if user != None: # if user found 
                 isCorrectPassword = checkPassword(password, user[2])
                 if isCorrectPassword: 
@@ -89,10 +86,8 @@ def login():
                     message = "Incorrect username or password. Please try again."
             else:  # if no user found 
                 message = "Incorrect username or password. Please try again."
-
     if 'username' in session: 
         return redirect(url_for('home'))
-
     return render_template('login.html', message=message)
 # !!! END OF LOGIN PAGE !!!
 
@@ -108,7 +103,6 @@ def register():
         username = request.form.get('username')
         password = request.form.get('password')
         hashedPassword = hash(password)
-
         #connect to db
         with engine.connect() as connection: 
             sameUsername = None # set to none before search starts 
@@ -123,7 +117,6 @@ def register():
                 session['username'] = username
             else: 
                 message="Username taken, sorry! Please enter a different one, or "
-
     if 'username' in session:
         return redirect(url_for('home'))
     return render_template('register.html', message=message)
@@ -138,21 +131,16 @@ def createNewGame(username):
         gameCode = random.randint(1000,9999)
         if gameCode not in gameManager.games:
             loop = False
-    
     # 2 | create new game object and add it to the game manager
     newGame = Game(gameCode)                
     gameManager.addGame(newGame)
-
     # 3 | add new field into tbl games in db 
     with engine.connect() as connection:
         connection.execute(text("INSERT INTO games DEFAULT VALUES"))
         connection.commit()
-
     # 4 | add new field into tbl gameParticipants in db, including the user who created the game. 
-        userID = connection.execute(text('SELECT userID from users WHERE username = :username'), {'username':username}).fetchone()
         gameID = connection.execute(text('SELECT MAX(gameID) from games')).fetchone()
         connection.commit()
-
     # 5 | set game object's gameID 
     newGame.setGameID(int(gameID[0]))
     return gameCode
@@ -163,7 +151,6 @@ def home():
     if 'username' not in session:
         return redirect(url_for('login'))
     username = session['username']
-
     # if form is submitted, get data 
     if request.method == "POST":                                
         gameCode = request.form.get("gameCode")
@@ -173,32 +160,22 @@ def home():
         # validate all data inputted, check for like empty fields ... 
         if join != False and not gameCode:              #check if code is entered if they want to join a room 
             error = "Please enter a code."
-        
         # if creating a room, create a new game
         elif create != False:               
             gameCode = createNewGame(username)
-
         # if they want to join a room, check if exists
         elif int(gameCode) not in gameManager.games:                             #else check if the room exists
             error = "Room does not exist."
-        
         # check if the room they're joining is full
         elif gameManager.getGame(int(gameCode)).isFull() == True:
             error = "Room is full."
-
-    
         if error != None:
             return render_template("home.html", error=error, gameCode=gameCode,username=username,user=session['username'])
-
-        session["username"] = username      #store the user's name and room in the session
+        #store the room in the session
         session["gameCode"] = int(gameCode)
-        
         return redirect(url_for("room", gameCode=gameCode))   #redirect to room page passing gameCode as argument 
-
-
     # default path
     return render_template('home.html', username=session['username'])
-
 # !!! END OF HOME PAGE !!!
 
 
@@ -207,11 +184,9 @@ def home():
 def room(gameCode):
     if 'username' not in session: 
         return redirect(url_for('login'))
-
     #get session data
     username = session.get('username')
     gameCode = session.get('gameCode')
-
     return render_template('room.html', gameCode=gameCode, username=username)
 
 # socketio event once client connects
@@ -221,19 +196,15 @@ def joinRoom(data):
     username = data['username']
     game = gameManager.getGame(gameCode)
     players = game.getPlayers()
-
     # check the join is valid 
     if gameCode not in gameManager.games or len(players) >= 2:
         return redirect(url_for('home'))
     else:
         # 1 | add player to the socketio room
         join_room(int(data['gameCode']))
-        # rooms = socketio.server.rooms(request.sid)     # get all rooms the current SID is in 
-
         # 2 | Create a new player object and add to game object
         newPlayer = Player(username, request.sid)
         game.addPlayer(newPlayer)
-
         # 3 | add player to gameParticipants in db
         with engine.connect() as connection: 
             userID = connection.execute(text('SELECT userID from users WHERE username = :username'), {'username':username}).fetchone()
@@ -248,10 +219,8 @@ def startGame(data):
     game = gameManager.getGame(int(data['gameCode']))
     players = game.getPlayers()
     playersList = list(players.values())
-    
     if len(playersList) == 2:
         game.beginGame()
-
         player = playersList[0] 
         player1Info = f"{player.getUsername()}: {player.getScore()}"
         player = playersList[1] 
@@ -274,7 +243,6 @@ def handleThrowForOtherUser(data):
     for sid in players: 
         if sid != playerTurn: 
             nonPlayerSID = sid
-
     socketio.emit('receiveOtherUserThrow', {'target': data['target']}, to=nonPlayerSID)
 
 # receive score and update 
@@ -282,7 +250,6 @@ def handleThrowForOtherUser(data):
 def handleScore(data):
     # this function is called once a throw has been made, and score sent. 
     # if in game, the game object will be updated; then check for game over, if so find the winner
-
     # get info 
     gameCode = int(data['gameCode'])
     game = gameManager.getGame(gameCode)
@@ -290,57 +257,56 @@ def handleScore(data):
     playersList = list(players.values())
     player1 = playersList[0] 
     player2 = playersList[1] 
-
     if game.getGameState() == "inProgress": #if game inProgress, try submit the score
-        
         score = int(data['score'])
         senderSID = request.sid
         isDouble = data['isDouble']
-        game.recordThrow(senderSID, score, isDouble)        # record throw into game object
-        
-        # prepare info to send as emit
-
+        game.recordThrow(senderSID, score, isDouble)        
+        # record throw into game object /\
+        # prepare info to send as emit \/
         player1Info = f"{player1.getUsername()}: {player1.getScore()}"
         player2Info = f"{player2.getUsername()}: {player2.getScore()}"
         playerTurn = game.getPlayerTurn()
         usernameTurn = game.getPlayer(playerTurn).getUsername()
-
         socketio.emit('scoreUpdate', {'player1Info':player1Info, 'player2Info':player2Info, 'playerTurn':usernameTurn}, to=gameCode)
         socketio.emit('enableDartResetPosBtn', {}, to=playerTurn)
 
-    if game.getGameState() == 'gameOver': #if game over, find winner, update db, and terminate 
-        # 1 | find winner : 
-        if player1.getScore() == 0:
-            winner = player1
-            loser = player2 
-        else:
-            winner = player2
-            loser = player1 
+    if game.getGameState() == 'gameOver': #if game over, find winner, update db, and terminate
+        handleWin(game,gameCode,player1,player2)
+        
+# if handleScore finds game over, finish game
+def handleWin(game,gameCode,player1,player2):
+    # 1 | find winner : 
+    if player1.getScore() == 0:
+        winner = player1
+        loser = player2 
+    else:
+        winner = player2
+        loser = player1 
 
-        # 2 | update games to set wasCompleted to true, and set winner in gameParticipants. 
-        gameID = game.getGameID()
-        with engine.connect() as connection:
-            connection.execute(text("UPDATE games SET wasCompleted = TRUE WHERE gameID = :gameID"), {'gameID':gameID})
-            winnerID = connection.execute(text("SELECT userID from users WHERE username = :username"), {'username': winner.getUsername()}).fetchone()[0]
-            connection.execute(text("UPDATE gameParticipants SET isWinner = TRUE WHERE gameID = :gameID AND userID = :userID"), {'gameID': gameID, 'userID': winnerID})
-            loserID = connection.execute(text("SELECT userID from users WHERE username = :username"), {'username': loser.getUsername()}).fetchone()[0]
-            connection.execute(text("UPDATE gameParticipants SET isWinner = FALSE WHERE gameID = :gameID AND userID = :userID"), {'gameID': gameID, 'userID': loserID})
-            connection.commit()
+    # 2 | update games to set wasCompleted to true, and set winner in gameParticipants. 
+    gameID = game.getGameID()
+    with engine.connect() as connection:
+        connection.execute(text("UPDATE games SET wasCompleted = TRUE WHERE gameID = :gameID"), {'gameID':gameID})
+        winnerID = connection.execute(text("SELECT userID from users WHERE username = :username"), {'username': winner.getUsername()}).fetchone()[0]
+        connection.execute(text("UPDATE gameParticipants SET isWinner = TRUE WHERE gameID = :gameID AND userID = :userID"), {'gameID': gameID, 'userID': winnerID})
+        loserID = connection.execute(text("SELECT userID from users WHERE username = :username"), {'username': loser.getUsername()}).fetchone()[0]
+        connection.execute(text("UPDATE gameParticipants SET isWinner = FALSE WHERE gameID = :gameID AND userID = :userID"), {'gameID': gameID, 'userID': loserID})
+        connection.commit()
 
-        # 3 | give currecny
-            connection.execute(text("UPDATE users SET currency = currency + 200 WHERE userID = :userID"), {'userID': winnerID})
-            connection.execute(text("UPDATE users SET currency = currency + 100 WHERE userID = :userID"), {'userID': loserID})
+    # 3 | give currecny
+        connection.execute(text("UPDATE users SET currency = currency + 200 WHERE userID = :userID"), {'userID': winnerID})
+        connection.execute(text("UPDATE users SET currency = currency + 100 WHERE userID = :userID"), {'userID': loserID})
 
-        # 4 | emit errorMessage (saying game over) and terminateGame
-        socketio.emit('clientError', {'errorMessage': f'Game Over! {winner.getUsername()} wins!'}, to=gameCode)
-        socketio.emit('terminateGame', {'winner':winner.getUsername()}, to=gameCode)
-        gameManager.terminateGame(gameCode)
+    # 4 | emit errorMessage (saying game over) and terminateGame
+    socketio.emit('clientError', {'errorMessage': f'Game Over! {winner.getUsername()} wins!'}, to=gameCode)
+    socketio.emit('terminateGame', {'winner':winner.getUsername()}, to=gameCode)
+    gameManager.terminateGame(gameCode)
 
 # when player 1 resets dart pos, reset player 2's aswell 
 @socketio.on('resetDartPos')
 def resetDartPos(data):
     socketio.emit('resetDartPosForOtherUser', {}, to=int(data['gameCode']))
-
 # !!! END OF ROOM PAGE !!!
 
 
@@ -415,8 +381,6 @@ def stats():
     globalStats = {'rankBy': rankBy, 'globalRank':globalRank}
 
     return render_template('stats.html', username=username, stats=playerStats, globalStats=globalStats)
-
-
 # !!! END OF STATS PAGE !!!
 
 # !!! SHOP PAGE !!!
@@ -475,7 +439,7 @@ def makePurchase(username, itemID):
     # see if possible to purchase
     with engine.connect() as connection:
         userID, currency = connection.execute(text('SELECT userID , currency from users WHERE username = :username'), {'username':username}).fetchone()
-        itemPrice = connection.execute(text('SELECT price from shop WHERE itemID = itemID'), {'itemID':itemID}).fetchone()[0]
+        itemPrice = connection.execute(text('SELECT price from shop WHERE itemID = :itemID'), {'itemID':itemID}).fetchone()[0]
         success = False
         if currency >= itemPrice:
             # can purchase 
@@ -491,21 +455,17 @@ def makePurchase(username, itemID):
 
         connection.commit()
     return success
-
 # !!! END OF SHOP PAGE !!!
 
-
+# !!! LOGOUT !!!
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
-
-
-
-
+# !!! END OF LOGOUT !!!
 
 
 # main 
 if __name__ == "__main__":
-    # socketio.run(app,host='192.168.0.233', port=5000, debug=True)
-    socketio.run(app, debug=True)
+    # socketio.run(app,host='192.168.68.111', port=5000, debug=True)     # for local network
+    socketio.run(app, debug=True)                                       # for local host

@@ -67,4 +67,3 @@ function calcNextPos(startPos, velocities, t, positionsArr = []) {
 export { getInitialVelocities, calcNextPos };
 
 
-

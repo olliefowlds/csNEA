@@ -114,11 +114,5 @@ if __name__ == "__main__":
     p2 = Player("Bob", "002")
     g.addPlayer(p1)
     g.addPlayer(p2)
+    g.beginGame()
 
-    print(g)
-    print(g.getPlayer("001"))
-
-    g.playerRefresh("003", "Alice")
-
-    print(g)
-    print(g.getPlayer("003"))

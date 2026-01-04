@@ -15,13 +15,10 @@
         <button class="home-btn" onclick="window.location.href='{{ url_for('home') }}'">Back to Home</button>
       </div>
     </div>
-
     <div class="main">
         <h1>Shop</h1>
         <p>Welcome to the shop!</p>
         <p>Balance: {{ dataToSend.currency }}</p>
-    
-        
         <form method="post" action="/shop">
             <table>
                 <thead>
@@ -31,7 +28,6 @@
                         <th></th>
                     </tr>
                 </thead>
-    
                 <tbody>
                     {% for item in dataToSend.tags %}
                     <tr>
@@ -48,6 +44,5 @@
             </table>
         </form>
     </div>
-     
 </body>
 </html>

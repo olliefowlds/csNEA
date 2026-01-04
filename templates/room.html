@@ -29,25 +29,19 @@
         <button onclick="window.location.href='{{ url_for('home') }}'">Back to Home</button>
       </div>
     </div>
-
     <div id="errorMessage" class="errorMessage"><p></p></div>
-
     <button id="resetDartPos" class="resetDartPos">Reset Dart Position</button>
-
     <div class="main-container">
       <canvas id="c"></canvas>
     </div>
-
     <div class="info-container">
       <div class="left-side">
         <button id="startGame" type="button" class="start-btn">Start Game</button>
-
         <div class="score-wrapper" id="scoreContainerDiv">
             <div class="player1Score"><span id="player1ScoreSpan"></span></div>
             <div class="player2Score"><span id="player2ScoreSpan"></span></div>
         </div>
       </div>
-
       <div class="right-side">
         <div class="throw-score-wrapper">
           <p>Most Recent Throw:</p>
@@ -55,10 +49,6 @@
         </div>
       </div>
     </div>
-
-
-
-
     <script>    // pass variables into the JS 
       const gameCode = "{{ gameCode }}";
       const username = "{{ username }}";
@@ -70,9 +60,3 @@
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
   </body>
 </html>
-
-
-
-<!-- <label for="scoreInput">Score:</label>
-<input type="number" id="scoreInput" name="scoreInput" value="0">
-<button id="sendScoreBtn">Send Score!</button> -->

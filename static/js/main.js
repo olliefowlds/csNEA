@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { canvasRenderSetUp, cameraSetUp, handleMousemove, handleMouseclick, handleOtherUserThrow, resetDartPos, initGraphics } from './graphics.js'
 
 
+// graphics side: define globals and invoke initGraphics
 let target = new THREE.Vector3(237,173,0); // Initialize mouse target
 const canvas = document.querySelector('#c');
 let camera
@@ -11,20 +12,12 @@ renderer = canvasRenderSetUp();
 camera = cameraSetUp();
 let mostRecentScore = 0
 
-
-// call grapics.js main function to set up scene. 
 initGraphics() 
 
 
-// SOCKETIO side
-// Connect to Flask Socket.IO
-// const socket = io("http://192.168.0.233:5000");  // :: for local network
+// SOCKETIO side: Connect to Flask Socket.IO
+// const socket = io("http://192.168.68.111:5000");  // :: for local network
 const socket = io("http://127.0.0.1:5000");         // :: for local host
-
-
-socket.on('connect', () => {
-    socket.emit('joinRoom', {'gameCode': gameCode, 'username': username})
-})
 
 // html elements 
 const startGameButton = document.getElementById('startGame')
@@ -88,6 +81,7 @@ function startGame() {
 
 // socket event handlers 
 socket.on("connect", () => {
+    socket.emit('joinRoom', {'gameCode': gameCode, 'username': username})
     resetDartPosBtn.style.display = "none"
 });
 socket.on('beginGameFrontEnd', (data) => {
@@ -116,6 +110,7 @@ socket.on('disableThrow', (data) => {
 })
 socket.on('terminateGame', (data) => {
     disableDartThrow()
+    disableDartResetPosBtn() 
 })
 socket.on('receiveOtherUserThrow', (data) => {
     handleOtherUserThrow(data.target)
